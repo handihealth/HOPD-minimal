@@ -402,7 +402,7 @@ $(document).ready(function () {
 
     function getITSSnomedMatches(searchString) {
         return $.ajax({
-            //      Authorization: "Basic " + btoa(itsUsername + ":" + itsPassword),
+
             type: 'GET',
             /*url: "http://www.itserver.es/ITServer/rest/snomedcore/lang/es/searchInSnomed/termToSearch/" + request.term + "/numberOfElements/110",*/
             url: baseItsNodeUrl + "/rest/codesystem/snomed%20ct/entities/?" + $.param({matchvalue: searchString}) + "&referencelanguage=" + "en" + "&filtercomponent=description&fuzzy=false",
@@ -422,6 +422,50 @@ $(document).ready(function () {
         });
     }
 
+    function getITSSnomedCTS(snomedID) {
+        return $.ajax({
+
+            type: 'GET',
+            url:  baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/170333009?referencelanguage=en",
+            dataType: "json",
+            beforeSend: function (req) {
+                req.setRequestHeader('Authorization', 'Basic ' + btoa(itsUsername + ":" + itsPassword));
+            },
+            data: {},
+            success: function (data) {
+
+                $('pre.snomedLookup').append(JSON.stringify(data, undefined, 2));
+            },
+            error: function () {
+                alert('Matching term for  "' + snomedID + '" not found');
+            }
+
+        });
+    }
+
+    function getITSSnomedTerm(snomedID) {
+        return $.ajax({
+
+            type: 'GET',
+            // url: baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/" + snomedID + "&referencelanguage=" + "en",
+            url:  baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/170333009?referencelanguage=en",
+            dataType: "json",
+            beforeSend: function (req) {
+                req.setRequestHeader('Authorization', 'Basic ' + btoa(itsUsername + ":" + itsPassword));
+            },
+            data: {},
+            success: function (data) {
+
+             SCTterm = data.EntityDescriptionMsg.EntityDescription.classDescription.designation["core:value"];
+                return SCTterm
+            },
+            error: function () {
+                alert('Matching term for  "' + snomedID + '" not found');
+            }
+
+        });
+    }
+
     function accessEhr(ehrBaseUrl) {
         ehrLogin(ehrBaseUrl).done(function () {
             getPatientEhr(nhsNumber,ehrBaseUrl).done(function () {
@@ -433,7 +477,8 @@ $(document).ready(function () {
                     getUKImmunisations((ehrBaseUrl),
                     displayAQLStatement(),
                     displayAQLResultset(ehrBaseUrl),
-                    getITSSnomedMatches('asthma')
+                    getITSSnomedMatches('puppet'),
+                    getITSSnomedCTS('170647000')
                     )
                 ).then(ehrLogout, demogLogout())
             });
