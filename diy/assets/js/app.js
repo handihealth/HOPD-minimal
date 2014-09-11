@@ -57,6 +57,7 @@ $(document).ready(function () {
 // var ehrId = "168f8b85-f70c-4342-ab42-51856cf1be14";
 // var ehrId = "879be82a-0a15-44fd-95c3-cef42f9560c3";
 
+// var ProceduresehrId = "ed26e420-abae-49ac-8d84-415a247814f7";
 
 // Basic HOPD API calls
 
@@ -111,6 +112,7 @@ $(document).ready(function () {
             success: function (data) {
                 var party = data;
                 ehrId = party.ehrId
+             //   ehrId = ProceduresehrId;
             },
             error: function(){alert('Service :' + ehrBaseUrl + 'EHRId for Patient NHS Number '+ nhsNumber +' not found');}
 
@@ -174,7 +176,7 @@ $(document).ready(function () {
     }
 
     function getclinicianDemographics() {
-        // Address
+        // Dummy function to populate clinician details
         $("#clinician-name").html(composer);
 
     }
@@ -187,8 +189,10 @@ $(document).ready(function () {
     function getUKAllergies(ehrBaseUrl) {
 
         aqlStatement = "select\
+            a/uid/value as uid,\
             a_a/data[at0001]/items[at0025]/items[at0021]/value as Date_recorded,\
-            a_a/data[at0001]/items[at0002]/value as Causative_agent\
+            a_a/data[at0001]/items[at0002]/value as Causative_agent,\
+            a_a/data[at0001]/items[at0002]/value/mappings/target as mappingCode\
         from EHR e\
         contains COMPOSITION a\
         contains EVALUATION a_a[openEHR-EHR-EVALUATION.adverse_reaction_uk.v1]";
@@ -200,7 +204,81 @@ $(document).ready(function () {
             },
             success: function (res) {
                 for (var i = 0; i < res.resultSet.length; i++) {
-                    $('ul.allergies'+ serverSuffix(ehrBaseUrl)).append('<li>'  + formatDate(res.resultSet[i].Date_recorded.value,false) + ' - ' + res.resultSet[i].Causative_agent.value + '</li>');
+                    $('ul.allergies'+ serverSuffix(ehrBaseUrl)).append('<li>'
+                        + formatDate(res.resultSet[i].Date_recorded.value,false) + ' - ' + res.resultSet[i].Causative_agent.value
+                        +  '<br>'
+                        + 'Code: ' + res.resultSet[i].mappingCode.code_string
+                        + '</li>');
+                }
+            },
+            error: function(){alert('fail');}
+
+        });
+    }
+
+    function getUKProcedures(ehrBaseUrl) {
+
+        aqlStatement = "select \
+            proc/time/value as dateTime,\
+            proc/description[at0001]/items[at0005]/value/value as comment,\
+            proc/description[at0001]/items[at0002]/value/value as procedureName,\
+            proc/description[at0001]/items[at0002]/value/defining_code as ReadCode, \
+            proc/description[at0001]/items[at0002]/value/mappings/target[terminology_id = 'SNOMED-CT'] as SnomedCode \
+        from EHR e\
+        contains COMPOSITION a\
+        contains ACTION proc[openEHR-EHR-ACTION.procedure.v1]";
+
+        return $.ajax({
+            url: ehrBaseUrl + formatPatientQuery(aqlStatement),
+            type: 'GET',
+            headers: {
+                "Ehr-Session": sessionId
+            },
+            success: function (res) {
+                for (var i = 0; i < res.resultSet.length; i++) {
+                    $('ul.procedures'+ serverSuffix(ehrBaseUrl)).append(
+                            '<li>'
+                            + formatDate(res.resultSet[i].dateTime,false)
+                            + ' - ' + res.resultSet[i].procedureName
+                            +'<br>'
+                            + " READ: " + res.resultSet[i].ReadCode.code_string
+                            + " SNOMED: " +res.resultSet[i].SnomedCode.code_string
+                            + '</li>');
+                }
+            },
+            error: function(){alert('fail');}
+
+        });
+    }
+
+    function getUKImmunisations(ehrBaseUrl) {
+
+        aqlStatement = "select\
+            a_a/description[at0001]/items[at0002]/value/value as immunisationName,\
+            a_a/description[at0001]/items[at0015]/value/value as Comment,\
+            a_a/description[at0001]/items[at0002]/value/defining_code as ReadCode, \
+            a_a/description[at0001]/items[at0002]/value/mappings/target[terminology_id = 'SNOMED-CT'] as SnomedCode, \
+            a_a/time as time\
+        from EHR e\
+        contains COMPOSITION a\
+        contains ACTION a_a[openEHR-EHR-ACTION.immunisation_procedure.v1]";
+
+        return $.ajax({
+            url: ehrBaseUrl + formatPatientQuery(aqlStatement),
+            type: 'GET',
+            headers: {
+                "Ehr-Session": sessionId
+            },
+            success: function (res) {
+                for (var i = 0; i < res.resultSet.length; i++) {
+                    $('ul.immunisations'+ serverSuffix(ehrBaseUrl)).append(
+                        '<li>'
+                        + formatDate(res.resultSet[i].time.value,false)
+                        + ' - ' + res.resultSet[i].immunisationName
+                        +' <br>'
+                        + " READ: " + res.resultSet[i].ReadCode.code_string
+                        + " SNOMED: " +res.resultSet[i].SnomedCode.code_string
+                        + '</li>');
                 }
             },
             error: function(){alert('fail');}
@@ -222,6 +300,7 @@ $(document).ready(function () {
     function getUKMedications(ehrBaseUrl) {
 
         aqlStatement = "select \
+            a/uid/value as uid,\
             a_b/items[at0001]/value/value as medName,\
             a_b/items[at0001]/value/defining_code/code_string as medCode,\
             a_b/items[at0001]/value/defining_code/terminology_id/value as CodeTerminology,\
@@ -259,26 +338,6 @@ $(document).ready(function () {
     }
 
     function displayAQLResultset(ehrBaseUrl) {
-//        aqlStatement = "select \
-//            a_b/items[at0001]/value/value as medName,\
-//            a_b/items[at0001]/value/defining_code/code_string as medCode,\
-//            a_b/items[at0001]/value/defining_code/terminology_id/value as CodeTerminology,\
-//            a_b/items[at0001]/value/mappings/target/code_string as MappingCode,\
-//            a_b/items[at0001]/value/mappings/target/terminology_id/value as MappingCodeTerminology,\
-//            a_b/items[at0019]/items[at0003]/value/value as medDose,\
-//            m_s/items[at0070, 'Last issued']/items[at0047]/value/value as lastIssueDate\
-//        from EHR e \
-//        contains COMPOSITION a \
-//            contains (\
-//                 INSTRUCTION a_a[openEHR-EHR-INSTRUCTION.medication_order_uk.v1]\
-//                     contains CLUSTER a_b[openEHR-EHR-CLUSTER.medication_item.v1]\
-//                     and\
-//                         CLUSTER m_s[openEHR-EHR-CLUSTER.medication_status.v1]) \
-//        where m_s/items[at0030]/value/defining_code/code_string='at0033' \
-//        )";
-
-
-
         return $.ajax({
             url: ehrBaseUrl + formatPatientQuery(aqlStatement),
             type: 'GET',
@@ -292,8 +351,6 @@ $(document).ready(function () {
 
         });
     }
-//[terminology_id/value='SNOMED-CT']
-// a_a/data[at0001]/items[at0002]/value/mappings[target/terminology_id/value = 'SNOMED-CT']/target as Snomed_map\
 
     function getUKProblems(ehrBaseUrl) {
         var aqlStatement = "select\
@@ -314,7 +371,12 @@ $(document).ready(function () {
             success: function (res) {
                 for (var i = 0; i < res.resultSet.length; i++) {
                     $('ul.problems'+serverSuffix(ehrBaseUrl) +
-                        '').append('<li>' + formatDate(res.resultSet[i].Date_of_Onset.value,false) + " " + res.resultSet[i].ProblemName + " READ: " + res.resultSet[i].ReadCode.code_string  + "  SNOMED: " +res.resultSet[i].SnomedCode.code_string);
+                        '').append('' +
+                        '   <li>'
+                        + formatDate(res.resultSet[i].Date_of_Onset.value,false) + "- " + res.resultSet[i].ProblemName
+                        + "<br/>"
+                        + " READ: " + res.resultSet[i].ReadCode.code_string
+                        + "  SNOMED: " +res.resultSet[i].SnomedCode.code_string);
                 }
             },
             error: function(){alert('fail');}
@@ -367,9 +429,12 @@ $(document).ready(function () {
                     getUKProblems(ehrBaseUrl),
                     getUKMedications(ehrBaseUrl),
                     getUKAllergies(ehrBaseUrl),
+                    getUKProcedures(ehrBaseUrl),
+                    getUKImmunisations((ehrBaseUrl),
                     displayAQLStatement(),
                     displayAQLResultset(ehrBaseUrl),
                     getITSSnomedMatches('asthma')
+                    )
                 ).then(ehrLogout, demogLogout())
             });
         });
