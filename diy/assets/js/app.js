@@ -477,7 +477,7 @@ $(document).ready(function () {
                     getUKImmunisations((ehrBaseUrl),
                     displayAQLStatement(),
                     displayAQLResultset(ehrBaseUrl),
-                    getITSSnomedMatches('puppet'),
+                    getITSSnomedMatches('peanut'),
                     getITSSnomedCTS('170647000')
                     )
                 ).then(ehrLogout, demogLogout())
