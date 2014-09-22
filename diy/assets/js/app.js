@@ -12,8 +12,8 @@ $(document).ready(function () {
     var baseUrl;
 
     var baseItsNodeUrl = "http://217.160.128.137:8080/ITSNode";
-    var composer ="Dr Louise Smith";
-    var commiter ="Dr Louise Smith";
+    var composer ="Dr Louise Jones";
+    var commiter ="Dr Louise Jones";
 //  Standard HANDI-HOPD domain
     var username = 'handi';
     var password = 'RPEcC859';
@@ -334,7 +334,12 @@ $(document).ready(function () {
 
 
     function displayAQLStatement() {
-        $('pre.aqlstatement').append(JSON.stringify(aqlStatement, undefined, 2));
+
+        var formatter = new AqlFormatter();
+        var formatted = formatter.formatAql(aqlStatement);
+        formatter.highlightAql(formatted, document.getElementById("aqlstatement"));
+
+//    $('pre.aqlstatement').append(JSON.stringify(aqlStatement, undefined, 2));
     }
 
     function displayAQLResultset(ehrBaseUrl) {
@@ -343,8 +348,11 @@ $(document).ready(function () {
             type: 'GET',
             headers: {
                 "Ehr-Session": sessionId
+            //    "Accept": 'text/xml'
             },
             success: function (res) {
+
+
                 $('pre.aqlresultset'+serverSuffix(ehrBaseUrl)).append(JSON.stringify(res.resultSet, undefined,2));
             },
             error: function(){alert('fail');}

@@ -245,7 +245,7 @@
                     <h3 class="panel-primary">AQL statement</h3>
                 </div>
                 <div class="panel-body">
-                    <pre class="aqlstatement"></pre>
+                    <pre id="aqlstatement" class="cm-s-ehrexplorer"></pre>
                 </div>
             </div>
 
@@ -312,6 +312,12 @@
 <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/datehelper.js"></script>
+<script src="assets/js/aql-format/CodeMirror/addon/runmode/runmode-standalone.js"></script>
+<script src="assets/js/aql-format/CodeMirror/mode/aql/aql.js"></script>
+<script src="assets/js/aql-format/CodeMirror/mode/javascript/javascript.js"></script>
+<script src="assets/js/aql-format/aql-format.js"></script>
+
+<link rel="stylesheet" href="assets/js/aql-format/CodeMirror/theme/ehrexplorer.css">
 
 <div class="footer">
     <div class="col-md-9">
