@@ -351,9 +351,8 @@ $(document).ready(function () {
             //    "Accept": 'text/xml'
             },
             success: function (res) {
-
-
-                $('pre.aqlresultset'+serverSuffix(ehrBaseUrl)).append(JSON.stringify(res.resultSet, undefined,2));
+                    var formatter = new AqlFormatter();
+                    formatter.highlightJson(JSON.stringify(res.resultSet, undefined,2), document.getElementById("aqlresultset"+serverSuffix(ehrBaseUrl)));
             },
             error: function(){alert('fail');}
 
