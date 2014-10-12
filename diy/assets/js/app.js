@@ -1,29 +1,31 @@
+var sessionId;
+var demogSessionId;
+var ehrId;
+var demographicsBaseUrl = "https://rest.ehrscape.com/rest/v1";
+var marandBaseUrl = "https://rest.ehrscape.com/rest/v1";
+var oceanBaseUrl = "http://ocean-db.cloudapp.net";
+var marandSessionId;
+var oceanSessionId;
+
+var baseUrl;
+
+var baseItsNodeUrl = "http://www.itserver.es:9080/ITSNode";
+var composer ="Dr Louise Jones";
+var commiter ="Dr Louise Jones";
+
+//  Standard HANDI-HOPD domain
+var username = 'handi';
+var password = 'RPEcC859';
+
+//  Standard HANDI-HOPD domain
+var itsUsername = 'handihopd';
+var itsPassword = 'dfg58pa';
+
+
 $(document).ready(function () {
 
-    var sessionId;
-    var demogSessionId;
-    var ehrId;
     var aqlStatement;
-
-    var demographicsBaseUrl = "https://rest.ehrscape.com/rest/v1";
-    var marandBaseUrl = "https://rest.ehrscape.com/rest/v1";
-    var oceanBaseUrl = "http://ocean-db.cloudapp.net";
-
-    var baseUrl;
-
-    var baseItsNodeUrl = "http://217.160.128.137:8080/ITSNode";
-    var composer ="Dr Louise Jones";
-    var commiter ="Dr Louise Jones";
-//  Standard HANDI-HOPD domain
-    var username = 'handi';
-    var password = 'RPEcC859';
-
-    //  Standard HANDI-HOPD domain
-    var itsUsername = 'handihopd';
-    var itsPassword = 'dfg58pa';
-
-
-    var aqlStatement = "select \
+    aqlStatement = "select \
             a_b/items[at0001]/value/value as medName,\
             a_b/items[at0001]/value/defining_code/code_string as medCode,\
             a_b/items[at0001]/value/defining_code/terminology_id/value as CodeTerminology,\
@@ -68,6 +70,14 @@ $(document).ready(function () {
             url: ehrBaseUrl + "/session?" + $.param({username: username, password: password}),
             success: function (res) {
                 sessionId = res.sessionId;
+                if (ehrBaseUrl == marandBaseUrl)
+                {
+                    marandSessionId = sessionId
+                }
+                else
+                {
+                    oceanSessionId = sessionId;
+                }
             }
         });
     }
@@ -338,8 +348,6 @@ $(document).ready(function () {
         var formatter = new AqlFormatter();
         var formatted = formatter.formatAql(aqlStatement);
         formatter.highlightAql(formatted, document.getElementById("aqlstatement"));
-
-//    $('pre.aqlstatement').append(JSON.stringify(aqlStatement, undefined, 2));
     }
 
     function displayAQLResultset(ehrBaseUrl) {
@@ -391,83 +399,25 @@ $(document).ready(function () {
         });
     }
 
-    function getTemplateExample(templateId,format) {
+
+
+    function getWebTemplates() {
         return $.ajax({
-            url: baseUrl + "/ehr/?" + $.param({format: format}),
+            url: marandBaseUrl + "/template",
             type: 'GET',
             headers: {
-                "Ehr-Session": sessionId
+                "Ehr-Session": marandSessionId
             },
             success: function (data) {
-                var party = data;
-                ehrId = party.ehrId
-            },
-            error: function(){alert('Patient NHS Number '+ nhsNumber +' not found');}
-
-        });
-    }
-
-    function getITSSnomedMatches(searchString) {
-        return $.ajax({
-
-            type: 'GET',
-            /*url: "http://www.itserver.es/ITServer/rest/snomedcore/lang/es/searchInSnomed/termToSearch/" + request.term + "/numberOfElements/110",*/
-            url: baseItsNodeUrl + "/rest/codesystem/snomed%20ct/entities/?" + $.param({matchvalue: searchString}) + "&referencelanguage=" + "en" + "&filtercomponent=description&fuzzy=false",
-            dataType: "json",
-            beforeSend: function (req) {
-                req.setRequestHeader('Authorization', 'Basic ' + btoa(itsUsername + ":" + itsPassword));
-            },
-            data: {},
-            success: function (data) {
-
-                $('pre.snomedresults').append(JSON.stringify(data, undefined, 2));
+                $("#webTemplates").empty();
+                $("#webTemplates2").empty();
+                $.each(data.templates, function (key, value) {
+                    $("#webTemplates").append("<option>" + value.templateId + "</option>");
+                    $("#webTemplates2").append("<option>" + value.templateId + "</option>");
+                });
             },
             error: function () {
-                alert('Matching term for  "' + searchString + '" not found');
-            }
-
-        });
-    }
-
-    function getITSSnomedCTS(snomedID) {
-        return $.ajax({
-
-            type: 'GET',
-            url:  baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/170333009?referencelanguage=en",
-            dataType: "json",
-            beforeSend: function (req) {
-                req.setRequestHeader('Authorization', 'Basic ' + btoa(itsUsername + ":" + itsPassword));
-            },
-            data: {},
-            success: function (data) {
-
-                $('pre.snomedLookup').append(JSON.stringify(data, undefined, 2));
-            },
-            error: function () {
-                alert('Matching term for  "' + snomedID + '" not found');
-            }
-
-        });
-    }
-
-    function getITSSnomedTerm(snomedID) {
-        return $.ajax({
-
-            type: 'GET',
-            // url: baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/" + snomedID + "&referencelanguage=" + "en",
-            url:  baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/170333009?referencelanguage=en",
-            dataType: "json",
-            beforeSend: function (req) {
-                req.setRequestHeader('Authorization', 'Basic ' + btoa(itsUsername + ":" + itsPassword));
-            },
-            data: {},
-            success: function (data) {
-
-             SCTterm = data.EntityDescriptionMsg.EntityDescription.classDescription.designation["core:value"];
-                return SCTterm
-            },
-            error: function () {
-                alert('Matching term for  "' + snomedID + '" not found');
+                alert('Web templates not found');
             }
 
         });
@@ -484,21 +434,177 @@ $(document).ready(function () {
                     getUKImmunisations((ehrBaseUrl),
                     displayAQLStatement(),
                     displayAQLResultset(ehrBaseUrl),
-                    getITSSnomedMatches('peanut'),
-                    getITSSnomedCTS('170647000')
+                    getWebTemplates()
                     )
-                ).then(ehrLogout, demogLogout())
+                ).then(demogLogout())
             });
         });
     }
 
-    // display page
+
+
+// display page
     var nhsNumber = "746"
     demogLogin().done(function () {
         getPatientDemographics(nhsNumber),
         getclinicianDemographics(),
-        accessEhr(marandBaseUrl),
+        accessEhr(marandBaseUrl)
         accessEhr(oceanBaseUrl)
     });
+
+
 });
+
+function getWebTemplateExample() {
+    var e = document.getElementById("webTemplates");
+    var templateId = e.options[e.selectedIndex].text;
+    var format = "STRUCTURED";
+    return $.ajax({
+        url: marandBaseUrl + "/template/"+templateId+"/example/?" + $.param({format: format}),
+        type: 'GET',
+        headers: {
+            "Ehr-Session": marandSessionId
+        },
+        success: function (data) {
+            $('pre.web_template_example_result').html(JSON.stringify(data, undefined, 2));
+        },
+        error: function(){
+            alert('Web Template '+ templateId +' not found');
+        }
+
+    });
+}
+
+
+function postComposition() {
+    var e = document.getElementById("webTemplates");
+    var templateId = e.options[e.selectedIndex].text;
+    var format = "STRUCTURED";
+    var compositionData ={"ctx/language": "en",
+        "ctx/territory": "GB",
+        "ctx/composer_name": composer,
+        "ctx/time": "2014-10-08T00:59:53.627+02:00",
+        "ctx/id_namespace": "NHSEngland",
+        "ctx/id_scheme": "NHSNumber",
+        "ctx/health_care_facility|name": "St James Hospital, Leeds",
+        "ctx/health_care_facility|id": "9091",
+        "oncology_diagnosis": {
+            "problem_diagnosis": [
+                {
+                    "problem_diagnosis": [
+                        {
+                            "|code": "254837009",
+                            "|value": "Breast cancer",
+                            "|terminology": "SNOMEDCT"
+                        }
+                    ],
+                    "description": [
+                        "Patient not aware of diagnosis."
+                    ],
+                    "body_site": [
+                        {
+                            "|code": "80248007",
+                            "|value": "Left breast ",
+                            "|terminology": "SNOMEDCT"
+                        }
+                    ]
+
+                }
+            ]
+        }
+    }
+
+    return $.ajax({
+        url: marandBaseUrl + "/composition/?"
+            + $.param({
+                ehrId: ehrId,
+                templateId: templateId,
+                format: format,
+                commiterName: encodeURIComponent(commiter)
+            }),
+        type: 'POST',
+        headers: {
+            "Ehr-Session": marandSessionId
+        },
+        contentType: 'application/json',
+        data: JSON.stringify(compositionData),
+        success: function (data) {
+            alert('Post Composition '+ templateId +' succeeded.');
+        },
+        error: function()
+        {
+            alert('Post Composition '+ templateId +' failed.');
+        }
+    });
+}
+
+function getITSSnomedMatches() {
+    var sctMatch = $("#txtTermSearch").val();
+
+    return $.ajax({
+
+        type: 'GET',
+        /*url: "http://www.itserver.es/ITServer/rest/snomedcore/lang/es/searchInSnomed/termToSearch/" + request.term + "/numberOfElements/110",*/
+        url: baseItsNodeUrl + "/rest/codesystem/snomed%20ct/entities/?" + $.param({matchvalue: sctMatch}) + "&referencelanguage=" + "en" + "&filtercomponent=description&fuzzy=false",
+        dataType: "json",
+        beforeSend: function (req) {
+            req.setRequestHeader('Authorization', 'Basic ' + btoa(itsUsername + ":" + itsPassword));
+        },
+        data: {},
+        success: function (data) {
+
+            $('pre.snomedLookupResults').html(JSON.stringify(data, undefined, 2));
+        },
+        error: function () {
+            alert('Matching term for  "' + sctMatch + '" not found');
+        }
+
+    });
+}
+
+function getITSSnomedCTS(snomedID) {
+    return $.ajax({
+
+        type: 'GET',
+        url:  baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/170333009?referencelanguage=en",
+        dataType: "json",
+        beforeSend: function (req) {
+            req.setRequestHeader('Authorization', 'Basic ' + btoa(itsUsername + ":" + itsPassword));
+        },
+        data: {},
+        success: function (data) {
+
+            $('pre.snomedLookup').append(JSON.stringify(data, undefined, 2));
+        },
+        error: function () {
+            alert('Matching term for  "' + snomedID + '" not found');
+        }
+
+    });
+}
+
+function getITSSnomedTerm(snomedID) {
+    return $.ajax({
+
+        type: 'GET',
+        // url: baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/" + snomedID + "&referencelanguage=" + "en",
+        url:  baseItsNodeUrl + "/rest/cts2/codesystem/snomedcore/entity/170333009?referencelanguage=en",
+        dataType: "json",
+        beforeSend: function (req) {
+            req.setRequestHeader('Authorization', 'Basic ' + btoa(itsUsername + ":" + itsPassword));
+        },
+        data: {},
+        success: function (data) {
+
+            SCTterm = data.EntityDescriptionMsg.EntityDescription.classDescription.designation["core:value"];
+            return SCTterm
+        },
+        error: function () {
+            alert('Matching term for  "' + snomedID + '" not found');
+        }
+
+    });
+}
+
+
 

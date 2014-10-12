@@ -268,40 +268,73 @@
                     </div>
                 </div>
             </div>
+                 <div class="panel-body">
+                     <pre class="snome
 
             <div class="col-md-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">OceanEHR</h3>
-                    </div>
-                    <div class="panel-body">
-                        <pre id ="aqlresultset_o" class="cm-s-ehrexplorer"></pre>
-                    </div>
+                     <div class="panel panel-default">
+                         <div class="panel-heading">
+                             <h3 class="panel-title">OceanEHR</h3>
+                         </div>
+                         <div class="panel-body">
+                             <pre id ="aqlresultset_o" class="cm-s-ehrexplorer"></pre>
+                         </div>
+                     </div>
+                 </div>
+
+             </div>
+
+         </div>
+    <div class=row>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-primary">SNOMED CT Term Search</h3>
+                <div class="panel-body">
+                    <input id=txtTermSearch type="text" placeholder="Find Matching Snomed terms">
+                    <button type="button" id="snomedLookup" onclick="getITSSnomedMatches()">Find</button>
                 </div>
+                <div class="panel-body">
+                    <pre class="snomedLookupResults"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class=row>
+        <div class="panel panel-default">
+            <h3 class="panel-primary">Web Template Example</h3>
+            <div class="panel-heading">
+                <select name = "drop_down" id= "webTemplates">
+                    <option value="None" selected="Selected">Select template</option>
+                </select>
+                <button type="button" id="runWebTemplateExample" onclick="getWebTemplateExample()">Go</button>
+            </div>
+            <div class="panel-body">
+                <pre class="web_template_example_result"></pre>
             </div>
 
         </div>
-
-    </div>
-         <div class=row>
-             <div class="panel panel-default">
-                 <div class="panel-heading">
-                     <h3 class="panel-primary">ITSNode search for 'peanut'</h3>
-                 </div>
-                 <div class="panel-body">
-                     <pre class="snomedresults"></pre>
-                 </div>
-             </div>
-         </div>
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-primary">ITSNode CTS2 lookup</h3>
-        </div>
-        <div class="panel-body">
-            <pre class="snomedLookup"></pre>
-        </div>
     </div>
 
+    <div class=row>
+        <div class="panel panel-default">
+            <h3 class="panel-primary">Commit Composition</h3>
+            <div class="panel-heading">
+                <select name = "dropdown" id= "compositionFormat">
+                    <option value="STRUCTURED" selected="Selected">STRUCTURED</option>
+                    <option value="RAW" >RAW</option>
+                </select>
+            </div>
+            <div class="panel-heading">
+                <input id="txtCompositionBody" type="text" placeholder="Composition content">
+                <button type="button" id="postComposition" onclick="postComposition()">Submit Composition</button>
+            </div>
+            <div class="panel-body">
+                <textarea rows="20" cols="40">
+                </textarea>
+            </div>
+
+        </div>
+    </div>
 
 </div>
 
